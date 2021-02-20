@@ -22,21 +22,26 @@
  * SOFTWARE.
  */
 
-package io.airbyte.migrate;
+package io.airbyte.commons.functional;
 
-import com.google.common.collect.ImmutableList;
-import io.airbyte.migrate.migrations.MigrationV0_14_0;
-import io.airbyte.migrate.migrations.MigrationV0_14_3;
-import io.airbyte.migrate.migrations.NoOpMigration;
-import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
-public class Migrations {
+public class Consumers {
 
-  private static final MigrationV0_14_0 MIGRATION_V_0_14_0 = new MigrationV0_14_0();
-  private static final MigrationV0_14_3 MIGRATION_V_0_14_3 = new MigrationV0_14_3(MIGRATION_V_0_14_0);
-  private static final Migration MIGRATION_V_0_15_0 = new NoOpMigration(MIGRATION_V_0_14_3, "0.15.0-alpha");
-
-  // all migrations must be added to the list in the order that they should be applied.
-  public static final List<Migration> MIGRATIONS = ImmutableList.of(MIGRATION_V_0_14_0, MIGRATION_V_0_14_3, MIGRATION_V_0_15_0);
+  /**
+   * Adds a function in front of a consumer. The return of the function will be consumed by the
+   * original consumer.
+   *
+   * @param beforeFunction function that will be execute on an item intended for a consumer.
+   * @param consumer the consumer that is being preempted.
+   * @param <T> type of the consumer.
+   * @return consumer that will run the function and then the original consumer on accept.
+   */
+  public static <T> Consumer<T> wrapConsumer(Function<T, T> beforeFunction, Consumer<T> consumer) {
+    return (json) -> {
+      consumer.accept(beforeFunction.apply(json));
+    };
+  }
 
 }

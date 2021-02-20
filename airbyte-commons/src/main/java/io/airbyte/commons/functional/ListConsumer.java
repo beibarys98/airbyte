@@ -22,21 +22,34 @@
  * SOFTWARE.
  */
 
-package io.airbyte.migrate;
+package io.airbyte.commons.functional;
 
-import com.google.common.collect.ImmutableList;
-import io.airbyte.migrate.migrations.MigrationV0_14_0;
-import io.airbyte.migrate.migrations.MigrationV0_14_3;
-import io.airbyte.migrate.migrations.NoOpMigration;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
-public class Migrations {
+/**
+ * Consumes elements and saves them into a list. This list can be accessed at anytime. Because this
+ * class stores everything it consumes in memory, it must be used carefully (the original use case
+ * is for testing interfaces that operate on consumers)
+ *
+ * @param <T> type of the consumed elements
+ */
+public class ListConsumer<T> implements Consumer<T> {
 
-  private static final MigrationV0_14_0 MIGRATION_V_0_14_0 = new MigrationV0_14_0();
-  private static final MigrationV0_14_3 MIGRATION_V_0_14_3 = new MigrationV0_14_3(MIGRATION_V_0_14_0);
-  private static final Migration MIGRATION_V_0_15_0 = new NoOpMigration(MIGRATION_V_0_14_3, "0.15.0-alpha");
+  private final List<T> consumed;
 
-  // all migrations must be added to the list in the order that they should be applied.
-  public static final List<Migration> MIGRATIONS = ImmutableList.of(MIGRATION_V_0_14_0, MIGRATION_V_0_14_3, MIGRATION_V_0_15_0);
+  public ListConsumer() {
+    this.consumed = new ArrayList<>();
+  }
+
+  @Override
+  public void accept(T t) {
+    consumed.add(t);
+  }
+
+  public List<T> getConsumed() {
+    return new ArrayList<>(consumed);
+  }
 
 }
